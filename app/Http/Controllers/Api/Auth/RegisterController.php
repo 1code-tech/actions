@@ -1,15 +1,15 @@
 <?php
 
-namespace App\Http\Controllers\Auth;
+namespace App\Http\Controllers\Api\Auth;
 
 use App\Models\User;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Auth;
+use App\Http\Resources\UserResource;
 use App\Actions\Users\CreateUserData;
 use App\Actions\Users\CreateUserAction;
-use App\Http\Requests\Auth\RegisterRequest;
 use App\Actions\Auth\AuthenticateUserAction;
+use App\Http\Requests\Api\Auth\RegisterRequest;
 
 class RegisterController extends Controller
 {
@@ -25,8 +25,12 @@ class RegisterController extends Controller
 
         $user = (new CreateUserAction)->run($data);
 
-        (new AuthenticateUserAction)->withSession($user);
+        $token = (new AuthenticateUserAction)->withToken(
+            $user,
+            $validated['device'],
+        );
 
-        return redirect()->route('user');
+        return UserResource::make($user)
+            ->additional(compact('token'));
     }
 }
